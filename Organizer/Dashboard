@@ -1,0 +1,47 @@
+@page
+@model wcerms.Pages.Organizer.DashboardModel
+@{
+	ViewData["Title"] = "Organizer Dashboard";
+}
+
+<div class="dashboard-wrapper organizer-dashboard">
+
+    <nav class="dashboard-sidebar">
+        <h3>Organizer Tools</h3>
+        <ul>
+            <li><a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent">Create Event</a></li>
+            <li><a asp-page="/Organizer/Dashboard" asp-route-Section="RequestVenue">Request Venue</a></li>
+            <li><a asp-page="/Organizer/Dashboard" asp-route-Section="RequestResources">Request Resources</a></li>
+            <li><a asp-page="/Organizer/Dashboard" asp-route-Section="MyBookings">My Bookings</a></li>
+        </ul>
+    </nav>
+
+    <main class="dashboard-main">
+        @switch (Model.Section)
+        {
+            case "CreateEvent":
+                <h2>Create Event</h2>
+                <form method="post">
+                    <input type="text" class="form-control" placeholder="Event Name" />
+                    <input type="date" class="form-control" />
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+                break;
+
+            case "RequestVenue":
+                <h2>Request Venue</h2>
+                <form method="post">
+                    <input type="text" class="form-control" placeholder="Venue Name" />
+                    <textarea class="form-control" placeholder="Details"></textarea>
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+                break;
+
+            default:
+                <h2>Welcome, Organizer!</h2>
+                break;
+        }
+
+    </main>
+
+</div>

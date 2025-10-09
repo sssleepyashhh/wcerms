@@ -1,0 +1,46 @@
+@page
+@model wcerms.Pages.Viewer.DashboardModel
+@{
+	ViewData["Title"] = "Viewer Dashboard";
+}
+
+<div class="dashboard-wrapper viewer-dashboard">
+
+    <nav class="dashboard-sidebar">
+        <h3>Viewer Tools</h3>
+        <ul>
+            <li><a asp-page="/Viewer/Dashboard" asp-route-Section="EventList">Browse Events</a></li>
+            <li><a asp-page="/Viewer/Dashboard" asp-route-Section="SearchVenues">Search Venues</a></li>
+        </ul>
+    </nav>
+
+    <main class="dashboard-main">
+        @switch (Model.Section)
+        {
+            case "EventList":
+                <h2>Browse Events</h2>
+                <table class="dashboard-table">
+                    <thead>
+                        <tr><th>Event</th><th>Date</th><th>Location</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Concert</td><td>2025-10-05</td><td>University Field</td></tr>
+                    </tbody>
+                </table>
+                break;
+
+            case "SearchVenues":
+                <h2>Search Venues</h2>
+                <form method="post">
+                    <input type="text" class="form-control" placeholder="Venue Name" />
+                    <button class="btn btn-primary">Search</button>
+                </form>
+                break;
+
+            default:
+                <h2>Welcome, Viewer!</h2>
+                break;
+        }
+    </main>
+
+</div>

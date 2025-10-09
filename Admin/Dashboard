@@ -1,0 +1,92 @@
+@page
+@model wcerms.Pages.Admin.DashboardModel
+@{
+	ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="dashboard-wrapper admin-dashboard">
+
+    <nav class="dashboard-sidebar">
+        <h3>Admin Tools</h3>
+        <ul>
+            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageVenues">Manage Venues</a></li>
+            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageResources">Manage Resources</a></li>
+            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageUsers">Manage Users</a></li>
+            <li><a asp-page="/Admin/Dashboard" asp-route-Section="Reports">View Reports</a></li>
+        </ul>
+    </nav>
+
+    <main class="dashboard-main">
+        @switch (Model.Section)
+        {
+            case "ManageVenues":
+                <h2>Manage Venues</h2>
+                <form method="post">
+                    <input type="text" class="form-control" placeholder="Venue Name" />
+                    <textarea class="form-control" placeholder="Venue Details"></textarea>
+                    <button class="btn btn-primary">Save</button>
+                </form>
+                break;
+
+            case "ManageResources":
+                <h2>Manage Resources</h2>
+                <form method="post">
+                    <input type="text" class="form-control" placeholder="Resource Name" />
+                    <button class="btn btn-primary">Save</button>
+                </form>
+                break;
+
+            case "ManageUsers":
+                <h2>Manage Users</h2>
+
+                <div style="margin-bottom: 10px;">
+                <a href="@Url.Action("AddUser", "Admin")" class="btn btn-success">Add User</a>
+                </div>
+
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Users != null && Model.Users.Any())
+                        {
+                            foreach (var user in Model.Users)
+                            {
+                                <tr>
+                                    <td>@user.Name</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Role</td>
+                                    <td>
+                                        <a href="@Url.Action("EditUser", "Admin", new { email = user.Email })" class="btn btn-primary btn-sm">Edit</a>
+                                        <a href="@Url.Action("DeleteUser", "Admin", new { email = user.Email })" class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3">No users found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "Reports":
+                <h2>Reports</h2>
+                <p>Reports content here...</p>
+                break;
+
+            default:
+                <h2>Welcome, Admin!</h2>
+                break;
+        }
+    </main>
+
+</div>
