@@ -20,21 +20,44 @@
         @switch (Model.Section)
         {
             case "ManageVenues":
-                <h2>Manage Venues</h2>
-                <form method="post">
-                    <input type="text" class="form-control" placeholder="Venue Name" />
-                    <textarea class="form-control" placeholder="Venue Details"></textarea>
-                    <button class="btn btn-primary">Save</button>
-                </form>
-                break;
+    			<h2>Manage Venues</h2>
+    			<form method="post">
+        			<div class="mb-3">
+        			<label>Venue Name</label>
+       				<input type="text" name="VenueName" class="form-control" placeholder="Enter Venue Name" required />
+        			</div>
 
-            case "ManageResources":
-                <h2>Manage Resources</h2>
-                <form method="post">
-                    <input type="text" class="form-control" placeholder="Resource Name" />
-                    <button class="btn btn-primary">Save</button>
-                </form>
-                break;
+        			<div class="mb-3">
+        			<label>Capacity (Max Number of People)</label>
+        			<input type="number" name="Capacity" class="form-control" placeholder="Enter Capacity"  min="1" required />
+        			</div>
+
+        			<div class="mb-3">
+        			<label>Venue Details</label>
+        			<textarea name="VenueDetails" class="form-control" placeholder="Describe the venue" rows="4"></textarea>
+        			</div>
+
+        			<button class="btn btn-primary">Save</button>
+    			</form>
+   
+    			break;
+
+			case "ManageResources":
+    			<h2>Manage Resources</h2>
+    			<form method="post">
+        			<input type="text" class="form-control" placeholder="Resource Name" />
+
+        			<div class="mb-3">
+        			<input type="number" name="Quantity" class="form-control" placeholder="Quantity"  min="1" required />
+        			</div>
+
+        			<div class="mb-3">
+        			<textarea name="Condition" class="form-control" rows="3"></textarea>
+        			</div>
+
+        			<button class="btn btn-primary" >Save</button>
+    			</form>
+   				break;
 
             case "ManageUsers":
                 <h2>Manage Users</h2>
