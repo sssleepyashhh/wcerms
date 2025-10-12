@@ -1,0 +1,19 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using static System.Collections.Specialized.BitVector32;
+
+namespace wcerms.Pages.Viewer
+{
+    public class DashboardModel : PageModel
+    {
+        [BindProperty(SupportsGet = true)]
+        public string Section { get; set; }
+        public void OnGet()
+        {
+            if (string.IsNullOrEmpty(Section))
+            {
+                Section = "Welcome";
+            }
+        }
+    }
+}
