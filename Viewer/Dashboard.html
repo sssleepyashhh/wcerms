@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viewer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="/" class="brand">wcerms</a>
+        <!-- Main Navigation Links -->
+        <div class="nav-links">
+            <a href="/">Sign In</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </nav>
+    <!-- Main Dashboard Container -->
+    <!-- Flexbox container that creates the two-column layout -->
+    <div class="dashboard-wrapper viewer-dashboard">
+        <!-- Sidebar Navigation -->
+        <!-- Contains tools and actions available to the viewer -->
+        <nav class="dashboard-sidebar">
+            <h3>Viewer Tools</h3>
+            <!-- Vertical navigation menu -->
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showSection('EventList')">Browse Events</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showSection('SearchVenues')">Search Venues</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <!-- Dynamic content area that changes based on selected tool -->
+        <main class="dashboard-main">
+            <!-- Events List Section -->
+            <!-- Displays a table of all available events -->
+            <div id="EventList" class="section" style="display: none;">
+                <h2>Browse Events</h2>
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Concert</td>
+                            <td>2025-10-05</td>
+                            <td>University Field</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Venue Search Section -->
+            <!-- Form for searching available venues -->
+            <div id="SearchVenues" class="section" style="display: none;">
+                <h2>Search Venues</h2>
+                <form onsubmit="searchVenues(event)">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Venue Name" />
+                        <button class="btn btn-primary mt-2">Search</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Welcome Section -->
+            <!-- Default view shown when dashboard first loads -->
+            <div id="Welcome" class="section welcome-section">
+                <h2>Welcome, Viewer!</h2>
+                <p>Select a tool from the sidebar to begin browsing events and venues.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <!-- Bootstrap JS - required for Bootstrap components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        /**
+         * Initialize the dashboard when the page loads
+         * Shows the welcome section by default
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('Welcome');
+        });
+
+        /**
+         * Shows the selected section and hides all others
+         * @param {string} sectionId - The ID of the section to show
+         */
+        function showSection(sectionId) {
+            // Hide all sections first
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        }
+
+        /**
+         * Handles the venue search form submission
+         * @param {Event} event - The form submission event
+         */
+        function searchVenues(event) {
+            event.preventDefault(); // Prevent form from submitting normally
+            // Placeholder for search functionality
+            alert('Search functionality would go here in a full implementation');
+        }
+    </script>
+</body>
+</html>
