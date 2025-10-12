@@ -21,13 +21,67 @@ namespace wcerms.Pages.Admin
 
         public List<User> Users { get; set; } = new List<User>();
 
-        public void OnGet()
+        public void OnGet(int? month, int? year)
         {
             if (Section == "ManageUsers")
             {
                 Users = _db.Users.ToList();
             }
+
+            //for Calendar (pwede baguhin and not connected pa sa database
+            Year = year ?? DateTime.Today.Year;
+            Month = month ?? DateTime.Today.Month;
+            InitializeCalendar(month, year);
         }
+
+        public class CalendarEvent
+        {
+            public DateTime Date { get; set; }
+            public string Title { get; set; }
+        }
+
+		private readonly List<CalendarEvent> _calendarEvents = new List<CalendarEvent>();
+
+		public int Year { get; private set; }
+		public int Month { get; private set; }
+		public int DaysInMonth { get; private set; }
+		public int StartDayOfWeek { get; private set; } // Sunday = 0
+		public string DisplayMonthYear => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+		public int PrevMonth { get; private set; }
+		public int PrevYear { get; private set; }
+		public int NextMonth { get; private set; }
+		public int NextYear { get; private set; }
+
+		public void InitializeCalendar(int? monthQuery, int? yearQuery)
+		{
+		    var today = DateTime.Today;
+		    Month = monthQuery ?? today.Month;
+		    Year = yearQuery ?? today.Year;
+		
+		    while (Month < 1) { Month += 12; Year -= 1; }
+		    while (Month > 12) { Month -= 12; Year += 1; }
+		
+		    DaysInMonth = DateTime.DaysInMonth(Year, Month);
+		    StartDayOfWeek = (int)new DateTime(Year, Month, 1).DayOfWeek;
+		
+		    var prev = new DateTime(Year, Month, 1).AddMonths(-1);
+		    var next = new DateTime(Year, Month, 1).AddMonths(1);
+		
+		    PrevMonth = prev.Month; PrevYear = prev.Year;
+		    NextMonth = next.Month; NextYear = next.Year;
+		
+		    _calendarEvents.Clear();
+		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 5), Title = "sample" });
+		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 6), Title = "sample2" });
+		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 8), Title = "sample3" });
+		}	
+		public List<string> GetEventsForDate(DateTime date)
+		{
+		    return _calendarEvents
+		            .Where(e => e.Date.Date == date.Date)
+		            .Select(e => e.Title)
+		            .ToList();
+		}
 
     }
 }
