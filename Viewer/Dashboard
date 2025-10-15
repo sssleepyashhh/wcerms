@@ -1,46 +1,106 @@
 @page
 @model wcerms.Pages.Viewer.DashboardModel
 @{
-	ViewData["Title"] = "Viewer Dashboard";
+    ViewData["Title"] = "Viewer Dashboard";
 }
 
-<div class="dashboard-wrapper viewer-dashboard">
+<main class="dashboard-layout">
+    <div class="dashboard-wrapper viewer-dashboard">
 
-    <nav class="dashboard-sidebar">
-        <h3>Viewer Tools</h3>
-        <ul>
-            <li><a asp-page="/Viewer/Dashboard" asp-route-Section="EventList">Browse Events</a></li>
-            <li><a asp-page="/Viewer/Dashboard" asp-route-Section="SearchVenues">Search Venues</a></li>
-        </ul>
-    </nav>
+        <!-- Sidebar -->
+        <nav class="dashboard-sidebar">
+            <h3>Viewer Tools</h3>
+            <ul>
+                <li><a asp-page="/Viewer/Dashboard" asp-route-Section="EventList">Browse Events</a></li>
+                <li><a asp-page="/Viewer/Dashboard" asp-route-Section="SearchVenues">Search Venues</a></li>
+            </ul>
+        </nav>
 
-    <main class="dashboard-main">
-        @switch (Model.Section)
-        {
-            case "EventList":
-                <h2>Browse Events</h2>
-                <table class="dashboard-table">
-                    <thead>
-                        <tr><th>Event</th><th>Date</th><th>Location</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Concert</td><td>2025-10-05</td><td>University Field</td></tr>
-                    </tbody>
-                </table>
-                break;
+        <!-- Main Content -->
+        <div class="dashboard-main">
 
-            case "SearchVenues":
-                <h2>Search Venues</h2>
-                <form method="post">
-                    <input type="text" class="form-control" placeholder="Venue Name" />
-                    <button class="btn btn-primary">Search</button>
-                </form>
-                break;
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success">@TempData["Message"]</div>
+            }
 
-            default:
-                <h2>Welcome, Viewer!</h2>
-                break;
-        }
-    </main>
+            @switch (Model.Section)
+            {
+                case "EventList":
+                    <section>
+                        <h2>Browse Events</h2>
+                        <table class="dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Concert</td>
+                                    <td>Oct 05, 2025</td>
+                                    <td>University Field</td>
+                                </tr>
+                                <tr>
+                                    <td>Seminar</td>
+                                    <td>Nov 12, 2025</td>
+                                    <td>Main Auditorium</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+                    break;
 
-</div>
+                case "SearchVenues":
+                    <section>
+                        <h2>Search Venues</h2>
+                        <form method="post" asp-page-handler="SearchVenues">
+                            <div class="mb-3">
+                                <label class="form-label">Venue Name</label>
+                                <input type="text" name="VenueName" class="form-control" placeholder="Enter Venue Name" required />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+
+                        @if (Model.SearchResults != null && Model.SearchResults.Any())
+                        {
+                            <h3>Search Results</h3>
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Venue Name</th>
+                                        <th>Capacity</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var venue in Model.SearchResults)
+                                    {
+                                        <tr>
+                                            <td>@venue.Name</td>
+                                            <td>@venue.Capacity</td>
+                                            <td>@venue.Location</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else if (Model.SearchResults != null)
+                        {
+                            <p>No venues found.</p>
+                        }
+                    </section>
+                    break;
+
+                default:
+                    <section>
+                        <h2>Welcome, Viewer!</h2>
+                        <p>Select a tool from the sidebar to browse events or search available venues.</p>
+                    </section>
+                    break;
+            }
+        </div>
+    </div>
+</main>
