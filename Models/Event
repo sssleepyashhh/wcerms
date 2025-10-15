@@ -1,0 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace wcerms.Models
+{
+    public class Event
+    {
+        [Key]
+        public int EventId { get; set; }
+        public string Title { get; set; } = "";
+        public string? Description { get; set; }
+        public DateTime start_datetime { get; set; }
+        public DateTime end_datetime { get; set; }
+
+        public int organizer_id { get; set; }
+        public User Organizer { get; set; } = null!;
+    }
+}
