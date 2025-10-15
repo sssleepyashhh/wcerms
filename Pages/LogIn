@@ -1,0 +1,29 @@
+@page
+@model wcerms.Pages.LogInModel
+@{
+	ViewData["Title"] = "Log In";
+}
+
+<div class="auth-container">
+    <h3>LOG IN</h3>
+
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="Input.Email" class="form-label">Email</label>
+            <input asp-for="Input.Email" class="form-control" type="email" placeholder="Email" required />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Input.Password" class="form-label">Password</label>
+            <input asp-for="Input.Password" class="form-control" type="password" placeholder="Password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+
+    <p>
+        Don’t have an account? <a asp-page="/SignIn">Sign In</a>
+    </p>
+
+    <p class="text-danger">@Model.ErrorMessage</p>
+</div>
