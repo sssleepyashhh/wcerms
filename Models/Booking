@@ -1,0 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace wcerms.Models
+{
+    public class Booking
+    {
+        [Key]
+        public int BookingId { get; set; }
+        public int EventId { get; set; }
+        public int VenueId { get; set; }
+        public DateTime Date { get; set; }
+        public string Status { get; set; } = "Pending";
+
+        public Event Event { get; set; } = null!;
+        public Venue Venue { get; set; } = null!;
+    }
+}
