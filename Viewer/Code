@@ -1,19 +1,79 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using wcerms.Data;
 using static System.Collections.Specialized.BitVector32;
 
 namespace wcerms.Pages.Viewer
 {
     public class DashboardModel : PageModel
     {
+        private readonly AppDbContext _context;
+
+        public DashboardModel(AppDbContext context)
+        {
+            _context = context;
+        }
+
         [BindProperty(SupportsGet = true)]
-        public string Section { get; set; }
+        public string Section { get; set; } = "Welcome";
+
+        [BindProperty]
+        public string VenueName { get; set; } = "";
+
+        public List<EventViewModel>? EventList { get; set; }
+        public List<Venue>? SearchResults { get; set; }
+
         public void OnGet()
         {
             if (string.IsNullOrEmpty(Section))
-            {
                 Section = "Welcome";
+
+            if (Section == "EventList")
+            {
+                LoadEvents();
             }
+        }
+
+        private void LoadEvents()
+        {
+            EventList = (from e in _context.Events
+                         join b in _context.Bookings on e.EventId equals b.EventId into eb
+                         from b in eb.DefaultIfEmpty()
+                         join v in _context.Venues on b.VenueId equals v.VenueId into bv
+                         from v in bv.DefaultIfEmpty()
+                         select new EventViewModel
+                         {
+                             Title = e.Title,
+                             Date = e.start_datetime,
+                             VenueName = v != null ? v.Name : "TBA"
+                         })
+                         .OrderBy(e => e.Date)
+                         .ToList();
+        }
+
+        public IActionResult OnPost()
+        {
+            Section = "SearchVenues";
+
+            if (!string.IsNullOrEmpty(VenueName))
+            {
+                SearchResults = _context.Venues
+                    .Where(v => v.Name.Contains(VenueName))
+                    .ToList();
+            }
+            else
+            {
+                SearchResults = new List<Venue>();
+            }
+
+            return Page();
+        }
+
+        public class EventViewModel
+        {
+            public string Title { get; set; } = "";
+            public DateTime Date { get; set; }
+            public string VenueName { get; set; } = "";
         }
     }
 }
