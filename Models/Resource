@@ -1,0 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace wcerms.Models
+{
+    public class Resource
+    {
+        [Key]
+        public int ResourceId { get; set; }
+        public string ResourceType { get; set; } = "";
+        public string ResourceName { get; set; } = "";
+        public int Quantity { get; set; }
+    }
+}
