@@ -1,0 +1,52 @@
+using wcerms.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Linq;
+
+namespace wcerms.Pages
+{
+    public class LogInModel : PageModel
+    {
+        private readonly AppDbContext _db;
+
+        public LogInModel(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        [BindProperty]
+        public LoginInputModel Input { get; set; }
+
+        public string ErrorMessage { get; set; }
+
+        public void OnGet() { }
+
+        public IActionResult OnPost()
+        {
+            var user = _db.Users.FirstOrDefault(u => u.Email == Input.Email && u.Password == Input.Password);
+
+            if (user == null)
+            {
+                ErrorMessage = "Invalid email or password.";
+                return Page();
+            }
+
+            if (user.Role == "Admin")
+                return RedirectToPage("/Admin/Dashboard");
+            if (user.Role == "Organizer")
+                return RedirectToPage("/Organizer/Dashboard");
+            if (user.Role == "Viewer")
+                return RedirectToPage("/Viewer/Dashboard");
+
+            return RedirectToPage("/Index");
+
+        }
+
+        public class LoginInputModel
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
+
+    }
+}
