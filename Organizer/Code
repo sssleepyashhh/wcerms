@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using wcerms.Data;
+using System.Linq;
 
 namespace wcerms.Pages.Organizer
 {
@@ -13,20 +14,21 @@ namespace wcerms.Pages.Organizer
             _context = context;
         }
 
-        [BindProperty(SupportsGet = true)]
-        public string Section { get; set; } = "Welcome";
-
+        [BindProperty(SupportsGet = true)] public string Section { get; set; } = "Welcome";
         [BindProperty] public string EventName { get; set; } = "";
         [BindProperty] public DateTime EventDate { get; set; } = DateTime.Today;
         [BindProperty] public string? EventDescription { get; set; }
-
         [BindProperty] public string VenueName { get; set; } = "";
         [BindProperty] public string? VenueDetails { get; set; }
-
         [BindProperty] public string ResourceType { get; set; } = "";
         [BindProperty] public int Quantity { get; set; }
 
         public List<BookingViewModel>? MyBookings { get; set; }
+        public int TotalEvents { get; set; }
+        public int TotalVenues { get; set; }
+        public int TotalResources { get; set; }
+        public int TotalBookings { get; set; }
+        [BindProperty(SupportsGet = true)] public string? Search { get; set; }
 
         public void OnGet()
         {
@@ -37,14 +39,27 @@ namespace wcerms.Pages.Organizer
             {
                 LoadBookings();
             }
+            else if (Section == "Overview")
+            {
+                TotalEvents = _context.Events.Count();
+                TotalVenues = _context.Venues.Count();
+                TotalResources = _context.Resources.Count();
+                TotalBookings = _context.Bookings.Count();
+            }
         }
 
         public IActionResult OnPostCreateEvent()
         {
-            if (!ModelState.IsValid)
+            if (EventDate < DateTime.Today)
             {
-                TempData["Message"] = "Invalid input!";
-                return Page();
+                TempData["Message"] = "Event date cannot be in the past.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
+            }
+
+            if (string.IsNullOrWhiteSpace(EventName))
+            {
+                TempData["Message"] = "Please enter an event name.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
             }
 
             var newEvent = new Event
@@ -52,8 +67,8 @@ namespace wcerms.Pages.Organizer
                 Title = EventName,
                 Description = EventDescription,
                 start_datetime = EventDate,
-                end_datetime = EventDate.AddHours(2), 
-                organizer_id = _context.Users.FirstOrDefault() 
+                end_datetime = EventDate.AddHours(2),
+                organizer_id = _context.Users.FirstOrDefault()
             };
 
             _context.Events.Add(newEvent);
@@ -65,12 +80,18 @@ namespace wcerms.Pages.Organizer
 
         public IActionResult OnPostRequestVenue()
         {
+            if (string.IsNullOrWhiteSpace(VenueName))
+            {
+                TempData["Message"] = "Venue name is required.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestVenue" });
+            }
+
             var venue = new Venue
             {
                 Name = VenueName,
                 Details = VenueDetails,
                 Capacity = 0,
-                Location = "TBD"
+                Location = "To be confirmed"
             };
 
             _context.Venues.Add(venue);
@@ -82,6 +103,12 @@ namespace wcerms.Pages.Organizer
 
         public IActionResult OnPostRequestResources()
         {
+            if (string.IsNullOrWhiteSpace(ResourceType) || Quantity <= 0)
+            {
+                TempData["Message"] = "Please provide valid resource and quantity.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestResources" });
+            }
+
             var resource = new Resource
             {
                 ResourceType = ResourceType,
@@ -98,16 +125,27 @@ namespace wcerms.Pages.Organizer
 
         private void LoadBookings()
         {
-            MyBookings = (from b in _context.Bookings
-                          join e in _context.Events on b.EventId equals e.EventId
-                          join v in _context.Venues on b.VenueId equals v.VenueId
-                          select new BookingViewModel
-                          {
-                              EventName = e.Title,
-                              VenueName = v.Name,
-                              Date = b.Date,
-                              Status = b.Status
-                          }).ToList();
+            var query = from b in _context.Bookings
+                        join e in _context.Events on b.EventId equals e.EventId
+                        join v in _context.Venues on b.VenueId equals v.VenueId
+                        select new BookingViewModel
+                        {
+                            EventName = e.Title,
+                            VenueName = v.Name,
+                            Date = b.Date,
+                            Status = b.Status
+                        };
+
+            if (!string.IsNullOrWhiteSpace(Search))
+                query = query.Where(b => b.EventName.Contains(Search) || b.Status.Contains(Search));
+
+            MyBookings = query.OrderByDescending(b => b.Date).ToList();
+
+            foreach (var booking in MyBookings)
+            {
+                if (booking.Date < DateTime.Today && booking.Status != "Completed")
+                    booking.Status = "Completed";
+            }
         }
 
         public class BookingViewModel
@@ -117,7 +155,5 @@ namespace wcerms.Pages.Organizer
             public DateTime Date { get; set; }
             public string Status { get; set; } = "";
         }
-
     }
 }
-
