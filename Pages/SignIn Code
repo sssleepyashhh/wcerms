@@ -1,0 +1,63 @@
+using wcerms.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Linq;
+
+namespace wcerms.Pages
+{
+    public class SignInModel : PageModel
+    {
+        private readonly AppDbContext _db;
+
+        public SignInModel(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        [BindProperty]
+        public RegisterInputModel Input { get; set; }
+
+        public string ErrorMessage { get; set; }
+        public string SuccessMessage { get; set; }
+
+        public void OnGet() { }
+
+        public IActionResult OnPost()
+        {
+            if (Input.Password != Input.ConfirmPassword)
+            {
+                ErrorMessage = "Passwords do not match.";
+                return Page();
+            }
+
+            if (_db.Users.Any(u => u.Email == Input.Email))
+            {
+                ErrorMessage = "Email already registered.";
+                return Page();
+            }
+
+            var user = new User
+            {
+                Name = Input.Name,
+                Email = Input.Email,
+                Password = Input.Password, 
+                Role = Input.Role
+            };
+
+            _db.Users.Add(user);
+            _db.SaveChanges();
+
+            SuccessMessage = "Registration successful. Please login.";
+            return RedirectToPage("Login");
+        }
+
+        public class RegisterInputModel
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public string ConfirmPassword { get; set; }
+            public string Role { get; set; }
+        }
+    }
+}
