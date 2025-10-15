@@ -1,0 +1,317 @@
+/* ================= Base HTML & Body ================= */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: url('/image/uu.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--silk);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================= Root Colors ================= */
+:root {
+    --dark-red: #3D0A05;
+    --grey-beige: #A58570;
+    --ruby-red: #7F1F0E;
+    --silk: #DAC1B1;
+    --indian-red: #AC746C;
+}
+
+/* ================= Focus Styles ================= */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* ================= Header ================= */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(165, 133, 112, 0.5) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(172, 116, 108, 0.3);
+    padding: 0.5rem 1rem;
+}
+
+/* ================= Auth Pages ================= */
+main {
+    position: relative;
+    z-index: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.auth-container {
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+    border-radius: 15px;
+    background: rgba(165, 133, 112, 0.55);
+    border: 1px solid rgba(172, 116, 108, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+    .auth-container h3 {
+        color: var(--dark-red);
+        margin-bottom: 1.5rem;
+        font-weight: bold;
+    }
+
+    .auth-container .form-control {
+        background-color: var(--silk);
+        border: 1px solid var(--indian-red);
+        color: var(--dark-red);
+        padding: 10px;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+        .auth-container .form-control:focus {
+            background-color: var(--silk);
+            color: var(--dark-red);
+            border-color: var(--ruby-red);
+            box-shadow: none;
+        }
+
+    .auth-container .btn-primary {
+        background-color: var(--ruby-red);
+        border: none;
+        border-radius: 30px;
+        padding: 10px;
+        font-weight: bold;
+        width: 100%;
+        cursor: pointer;
+    }
+
+        .auth-container .btn-primary:hover {
+            background-color: var(--dark-red);
+        }
+
+a {
+    color: var(--dark-red);
+    font-weight: bold;
+}
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+.auth-container p {
+    margin-top: 1rem;
+}
+
+/* ================= Dashboard Layout ================= */
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    margin-top: 20px; /* below navbar */
+    padding: 2rem;
+    width: 100%;
+    min-height: calc(95vh - 100px - 60px);
+    box-sizing: border-box;
+}
+
+/* ================= Sidebar ================= */
+.dashboard-sidebar {
+    width: 250px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 15px;
+    padding: 1rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    height: auto;
+}
+
+    .dashboard-sidebar h3 {
+        margin-bottom: 1rem;
+        color: var(--dark-red);
+    }
+
+    .dashboard-sidebar ul {
+        list-style: none;
+        padding: 0;
+    }
+
+        .dashboard-sidebar ul li {
+            margin-bottom: 1rem;
+        }
+
+            .dashboard-sidebar ul li a {
+                text-decoration: none;
+                font-weight: bold;
+                display: block;
+                padding: 0.5rem 1rem;
+                border-radius: 10px;
+                color: var(--dark-red);
+                background-color: rgba(255,255,255,0.2);
+                transition: all 0.3s ease;
+            }
+
+                .dashboard-sidebar ul li a:hover {
+                    background-color: rgba(255,255,255,0.4);
+                    color: var(--ruby-red);
+                }
+
+/* ================= Dashboard Main ================= */
+.dashboard-main {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+    .dashboard-main h2 {
+        color: var(--dark-red);
+        margin-bottom: 1.5rem;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    /* ================= Dashboard Form ================= */
+    .dashboard-main input[type="text"],
+    .dashboard-main input[type="date"],
+    .dashboard-main textarea,
+    .dashboard-main button[type="submit"] {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: 1px solid var(--indian-red);
+        background-color: var(--silk);
+        color: var(--dark-red);
+        box-sizing: border-box;
+    }
+
+        .dashboard-main input[type="text"]:focus,
+        .dashboard-main input[type="date"]:focus,
+        .dashboard-main textarea:focus {
+            border-color: var(--ruby-red);
+            box-shadow: 0 0 5px rgba(127,31,14,0.4);
+            outline: none;
+        }
+
+    .dashboard-main button[type="submit"] {
+        background-color: var(--ruby-red);
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .dashboard-main button[type="submit"]:hover {
+            background-color: var(--dark-red);
+        }
+
+    /* ================= Tables ================= */
+    .dashboard-main table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .dashboard-main th,
+    .dashboard-main td {
+        padding: 0.75rem;
+        border: 1px solid rgba(172, 116, 108, 0.5);
+        border-radius: 6px;
+    }
+
+    .dashboard-main th {
+        background: rgba(127,31,14,0.4);
+        color: var(--silk);
+    }
+
+    .dashboard-main tr:nth-child(even) {
+        background: rgba(255,255,255,0.1);
+    }
+
+/* ================= Dashboard Colors ================= */
+.admin-dashboard {
+    background: rgba(127,31,14,0.55);
+}
+
+.organizer-dashboard {
+    background: rgba(165,133,112,0.55);
+}
+
+.viewer-dashboard {
+    background: rgba(172,116,108,0.55);
+}
+
+/* ================= Responsive Scaling ================= */
+@media (max-width: 992px) {
+    .dashboard-wrapper {
+        flex-direction: column;
+        margin-top: 60px;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-main {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1600px) {
+    .dashboard-wrapper {
+        padding-left: 5rem;
+        padding-right: 5rem;
+    }
+
+    .dashboard-main input[type="text"],
+    .dashboard-main input[type="date"],
+    .dashboard-main textarea,
+    .dashboard-main button[type="submit"] {
+        font-size: 18px;
+        padding: 16px;
+    }
+}
+
+.auth-container label {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    color: var(--silk);
+    margin-bottom: 0.3rem;
+    margin-top: 0.8rem;
+}
