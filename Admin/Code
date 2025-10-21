@@ -1,87 +1,356 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using wcerms.Data; 
-using wcerms.Models; 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using wcerms.Data;
+using wcerms.Models;
 
 namespace wcerms.Pages.Admin
 {
     public class DashboardModel : PageModel
     {
-        private readonly AppDbContext _db;
+        private readonly AppDbContext _context;
 
-        public DashboardModel(AppDbContext db)
+        public DashboardModel(AppDbContext context)
         {
-            _db = db;
+            _context = context;
         }
 
         [BindProperty(SupportsGet = true)]
-        public string Section { get; set; }
+        public string Section { get; set; } = "Welcome";
 
-        public List<User> Users { get; set; } = new List<User>();
+        [TempData]
+        public string? Message { get; set; }
 
-        public void OnGet(int? month, int? year)
-        {
-            if (Section == "ManageUsers")
-            {
-                Users = _db.Users.ToList();
-            }
+        [BindProperty] public string VenueName { get; set; } = "";
+        [BindProperty] public int Capacity { get; set; }
+        [BindProperty] public string? VenueDetails { get; set; }
+        [BindProperty] public string Location { get; set; } = "";
 
-            //for Calendar (pwede baguhin and not connected pa sa database
-            Year = year ?? DateTime.Today.Year;
-            Month = month ?? DateTime.Today.Month;
-            InitializeCalendar(month, year);
-        }
+        [BindProperty] public string ResourceName { get; set; } = "";
+        [BindProperty] public int Quantity { get; set; }
+        [BindProperty] public string? ResourceType { get; set; }
+
+        public List<User> Users { get; set; } = new();
+        public List<Venue> Venues { get; set; } = new();
+        public List<Resource> Resources { get; set; } = new();
+        public List<AuditLog> Reports { get; set; } = new();
 
         public class CalendarEvent
         {
             public DateTime Date { get; set; }
-            public string Title { get; set; }
+            public string Title { get; set; } = "";
         }
 
-		private readonly List<CalendarEvent> _calendarEvents = new List<CalendarEvent>();
+        public List<CalendarEvent> CalendarEvents { get; set; } = new();
+        public int Year { get; private set; }
+        public int Month { get; private set; }
+        public int DaysInMonth { get; private set; }
+        public int StartDayOfWeek { get; private set; }
+        public string DisplayMonthYear => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+        public int PrevMonth { get; private set; }
+        public int PrevYear { get; private set; }
+        public int NextMonth { get; private set; }
+        public int NextYear { get; private set; }
+        public int VenueId {  get; private set; }
 
-		public int Year { get; private set; }
-		public int Month { get; private set; }
-		public int DaysInMonth { get; private set; }
-		public int StartDayOfWeek { get; private set; } // Sunday = 0
-		public string DisplayMonthYear => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
-		public int PrevMonth { get; private set; }
-		public int PrevYear { get; private set; }
-		public int NextMonth { get; private set; }
-		public int NextYear { get; private set; }
+        //added
+        [BindProperty(SupportsGet = true)]
+        public int? EditResourceId { get; set; }
 
-		public void InitializeCalendar(int? monthQuery, int? yearQuery)
-		{
-		    var today = DateTime.Today;
-		    Month = monthQuery ?? today.Month;
-		    Year = yearQuery ?? today.Year;
-		
-		    while (Month < 1) { Month += 12; Year -= 1; }
-		    while (Month > 12) { Month -= 12; Year += 1; }
-		
-		    DaysInMonth = DateTime.DaysInMonth(Year, Month);
-		    StartDayOfWeek = (int)new DateTime(Year, Month, 1).DayOfWeek;
-		
-		    var prev = new DateTime(Year, Month, 1).AddMonths(-1);
-		    var next = new DateTime(Year, Month, 1).AddMonths(1);
-		
-		    PrevMonth = prev.Month; PrevYear = prev.Year;
-		    NextMonth = next.Month; NextYear = next.Year;
-		
-		    _calendarEvents.Clear();
-		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 5), Title = "sample" });
-		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 6), Title = "sample2" });
-		    _calendarEvents.Add(new CalendarEvent { Date = new DateTime(2025, 10, 8), Title = "sample3" });
-		}	
-		public List<string> GetEventsForDate(DateTime date)
-		{
-		    return _calendarEvents
-		            .Where(e => e.Date.Date == date.Date)
-		            .Select(e => e.Title)
-		            .ToList();
-		}
+        [BindProperty]
+        public int VenueID { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public int? EditVenueId { get; set; }
 
+        [BindProperty]
+        public int ResourceId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? EditUserId { get; set; }
+
+        [BindProperty]
+        public int UserId { get; set; }
+
+        [BindProperty]
+        public string UserName { get; set; } = "";
+
+        [BindProperty]
+        public string UserEmail { get; set; } = "";
+
+        [BindProperty]
+        public string UserPassword { get; set; } = "";
+
+        [BindProperty]
+        public string UserRole { get; set; } = "";
+
+        public void OnGet(int? month, int? year)
+        {
+            switch (Section)
+            {
+                case "ManageUsers": LoadUsers(); break;
+                case "ManageVenues": LoadVenues(); break;
+                case "ManageResources": LoadResources(); break;
+                case "Calendar": InitializeCalendar(month, year); break;
+                case "Reports": LoadReports(); break;
+                default:
+                    Users = _context.Users.ToList();
+                    Venues = _context.Venues.ToList();
+                    Resources = _context.Resources.ToList();
+                    break;
+            }
+        }
+
+        //private void LoadVenues() => Venues = _context.Venues.OrderBy(v => v.Name).ToList();
+
+        private void LoadVenues()
+        {
+            Venues = _context.Venues.OrderBy(v => v.Name).ToList();
+
+            // If EditVenueId is set, populate the form fields
+            if (EditVenueId.HasValue)
+            {
+                var venue = _context.Venues.Find(EditVenueId.Value);
+                if (venue != null)
+                {
+                    VenueId = venue.VenueId;
+                    VenueName = venue.Name;
+                    Capacity = venue.Capacity;
+                    Location = venue.Location;
+                    VenueDetails = venue.Details;
+                }
+            }
+        }
+        //private void LoadResources() => Resources = _context.Resources.OrderBy(r => r.ResourceName).ToList();
+        private void LoadResources()
+        {
+            Resources = _context.Resources.OrderBy(r => r.ResourceName).ToList();
+
+            // If EditResourceId is set, populate the form fields
+            if (EditResourceId.HasValue)
+            {
+                var resource = _context.Resources.Find(EditResourceId.Value);
+                if (resource != null)
+                {
+                    ResourceId = resource.ResourceId;
+                    ResourceName = resource.ResourceName;
+                    Quantity = resource.Quantity;
+                    ResourceType = resource.ResourceType;
+                }
+            }
+        }
+        //private void LoadUsers() => Users = _context.Users.OrderBy(u => u.Name).ToList();
+
+        private void LoadUsers()
+        {
+            Users = _context.Users.OrderBy(u => u.Name).ToList();
+
+            // If EditUserId is set, populate the form fields
+            if (EditUserId.HasValue)
+            {
+                var user = _context.Users.Find(EditUserId.Value);
+                if (user != null)
+                {
+                    UserId = user.UserId;
+                    UserName = user.Name;
+                    UserEmail = user.Email;
+                    UserPassword = user.Password;
+                    UserRole = user.Role;
+                }
+            }
+        }
+
+        public IActionResult OnPostAddVenue()
+        {
+            if (string.IsNullOrWhiteSpace(VenueName)) { Message = "Venue name cannot be empty."; return RedirectToPage(new { Section = "ManageVenues" }); }
+
+            var venue = new Venue
+            {
+                Name = VenueName,
+                Capacity = Capacity,
+                Location = Location,
+                Details = string.IsNullOrWhiteSpace(VenueDetails) ? "No details" : VenueDetails
+            };
+
+            _context.Venues.Add(venue);
+            _context.SaveChanges();
+            Message = $"Venue '{VenueName}' added successfully!";
+            return RedirectToPage(new { Section = "ManageVenues" });
+        }
+
+        //update venue
+        public IActionResult OnPostUpdateVenue()
+        {
+            if (string.IsNullOrWhiteSpace(VenueName))
+            {
+                Message = "Venue name cannot be empty."; return RedirectToPage(new { Section = "ManageVenues" });
+            }
+
+            var existingVenue = _context.Venues.Find(VenueID);
+            if (existingVenue != null)
+            {
+                existingVenue.Name = VenueName;
+                existingVenue.Capacity = Capacity;
+                existingVenue.Location = Location;
+                existingVenue.Details = string.IsNullOrWhiteSpace(VenueDetails) ? "No details" : VenueDetails;
+
+                _context.Venues.Update(existingVenue);
+                _context.SaveChanges();
+                Message = $"Venue '{VenueName}' updated successfully!";
+            }
+
+            return RedirectToPage(new { Section = "ManageVenues" });
+        }
+        
+
+        public IActionResult OnPostAddResource()
+        {
+            if (string.IsNullOrWhiteSpace(ResourceName)) { Message = "Resource name cannot be empty."; return RedirectToPage(new { Section = "ManageResources" }); }
+
+            var resource = new Resource
+            {
+                ResourceName = ResourceName,
+                Quantity = Quantity,
+                ResourceType = ResourceType ?? "General"
+            };
+
+            _context.Resources.Add(resource);
+            _context.SaveChanges();
+            Message = $"Resource '{ResourceName}' added successfully!";
+            return RedirectToPage(new { Section = "ManageResources" });
+        }
+
+        //update resource
+        public IActionResult OnPostUpdateResource()
+        {
+            if (string.IsNullOrWhiteSpace(ResourceName))
+            {
+                Message = "Resource name cannot be empty.";
+                return RedirectToPage(new { Section = "ManageResources" });
+            }
+
+            var existingResource = _context.Resources.Find(ResourceId);
+            if (existingResource != null)
+            {
+                existingResource.ResourceName = ResourceName;
+                existingResource.Quantity = Quantity;
+                existingResource.ResourceType = ResourceType ?? "General";
+
+                _context.Resources.Update(existingResource);
+                _context.SaveChanges();
+                Message = $"Resource '{ResourceName}' updated successfully!";
+            }
+
+            return RedirectToPage(new { Section = "ManageResources" });
+        }
+
+        public IActionResult OnPostAddUser(string Name, string Email, string Password, string Role)
+        {
+            var user = new User { Name = Name, Email = Email, Password = Password, Role = Role };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            return RedirectToPage(new { Section = "ManageUsers" });
+        }
+        //update user
+        public IActionResult OnPostUpdateUser()
+        {
+            if (string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(UserEmail))
+            {
+                Message = "Name and Email cannot be empty.";
+                return RedirectToPage(new { Section = "ManageUsers" });
+            }
+
+            var existingUser = _context.Users.Find(UserId);
+            if (existingUser != null)
+            {
+                existingUser.Name = UserName;
+                existingUser.Email = UserEmail;
+                existingUser.Password = UserPassword;
+                existingUser.Role = UserRole;
+
+                _context.Users.Update(existingUser);
+                _context.SaveChanges();
+                Message = $"User '{UserName}' updated successfully!";
+            }
+
+            return RedirectToPage(new { Section = "ManageUsers" });
+        }
+
+        public IActionResult OnGetDeleteUser(int id)
+        {
+            var user = _context.Users.Find(id);
+            if (user != null) { _context.Users.Remove(user); _context.SaveChanges(); }
+            return RedirectToPage(new { Section = "ManageUsers" });
+        }
+
+        public IActionResult OnGetDeleteVenue(int id)
+        {
+            var venue = _context.Venues.Find(id);
+            if (venue != null) { _context.Venues.Remove(venue); _context.SaveChanges(); }
+            return RedirectToPage(new { Section = "ManageVenues" });
+        }
+
+        public IActionResult OnGetDeleteResource(int id)
+        {
+            var resource = _context.Resources.Find(id);
+            if (resource != null) { _context.Resources.Remove(resource); _context.SaveChanges(); }
+            return RedirectToPage(new { Section = "ManageResources" });
+        }
+
+        public void InitializeCalendar(int? monthQuery, int? yearQuery)
+        {
+            var today = DateTime.Today;
+            Month = monthQuery ?? today.Month;
+            Year = yearQuery ?? today.Year;
+
+            while (Month < 1) { Month += 12; Year -= 1; }
+            while (Month > 12) { Month -= 12; Year += 1; }
+
+            DaysInMonth = DateTime.DaysInMonth(Year, Month);
+            StartDayOfWeek = (int)new DateTime(Year, Month, 1).DayOfWeek;
+
+            var prev = new DateTime(Year, Month, 1).AddMonths(-1);
+            var next = new DateTime(Year, Month, 1).AddMonths(1);
+
+            PrevMonth = prev.Month; PrevYear = prev.Year;
+            NextMonth = next.Month; NextYear = next.Year;
+
+            CalendarEvents = _context.Events
+                .Where(e => (e.start_datetime.Year == Year && e.start_datetime.Month == Month) ||
+                            (e.end_datetime.Year == Year && e.end_datetime.Month == Month))
+                .Select(e => new CalendarEvent { Date = e.start_datetime, Title = e.Title })
+                .ToList();
+        }
+
+        public List<string> GetEventsForDate(DateTime date)
+        {
+            return CalendarEvents.Where(e => e.Date.Date == date.Date).Select(e => e.Title).ToList();
+        }
+
+        public List<AuditLog> AuditLogs { get; set; } = new();
+        [BindProperty(SupportsGet = true)] public string? ReportSearch { get; set; }
+        [BindProperty(SupportsGet = true)] public string? TableFilter { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? DateFrom { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? DateTo { get; set; }
+
+        private void LoadReports()
+        {
+            var query = _context.AuditLog.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(ReportSearch))
+            {
+                string s = ReportSearch.ToLower();
+                query = query.Where(r => r.TableName.ToLower().Contains(s) ||
+                                         r.ActionType.ToLower().Contains(s) ||
+                                         (r.KeyValues != null && r.KeyValues.ToLower().Contains(s)) ||
+                                         (r.NewValues != null && r.NewValues.ToLower().Contains(s)) ||
+                                         (r.OldValues != null && r.OldValues.ToLower().Contains(s)));
+            }
+            if (!string.IsNullOrWhiteSpace(TableFilter)) query = query.Where(r => r.TableName == TableFilter);
+            if (DateFrom.HasValue) query = query.Where(r => r.PerformedAt >= DateFrom.Value);
+            if (DateTo.HasValue) query = query.Where(r => r.PerformedAt <= DateTo.Value);
+
+            AuditLogs = query.OrderByDescending(r => r.PerformedAt).Take(200).ToList();
+        }
     }
 }
