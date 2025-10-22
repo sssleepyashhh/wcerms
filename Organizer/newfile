@@ -1,0 +1,26 @@
+namespace wcerms.Models
+{
+    public class OrganizerVenueVM
+    {
+        public int VenueId { get; set; }
+        public string Name { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string? Details { get; set; }
+    }
+
+    public class OrganizerResourceVM
+    {
+        public int ResourceId { get; set; }
+        public string ResourceType { get; set; } = "";
+        public string ResourceName { get; set; } = "";
+        public int Quantity { get; set; }
+    }
+
+    public class OrganizerBookingVM
+    {
+        public string EventName { get; set; } = "";
+        public string VenueName { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Status { get; set; } = "";
+    }
+}
