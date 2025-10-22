@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Linq;
 using wcerms.Data;
 using wcerms.Models;
+using System.Linq;
 
 namespace wcerms.Pages.Organizer
 {
@@ -75,7 +75,7 @@ namespace wcerms.Pages.Organizer
                 return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
             }
 
-            var newEvent = new wcerms.Data.Event
+            var newEvent = new Event
             {
                 Title = EventName,
                 Description = EventDescription,
@@ -99,7 +99,7 @@ namespace wcerms.Pages.Organizer
                 return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestVenue" });
             }
 
-            var venue = new wcerms.Data.Venue
+            var venue = new Venue
             {
                 Name = VenueName,
                 Details = VenueDetails,
@@ -122,7 +122,7 @@ namespace wcerms.Pages.Organizer
                 return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestResources" });
             }
 
-            var resource = new wcerms.Data.Resource
+            var resource = new Resource
             {
                 ResourceType = ResourceType,
                 ResourceName = $"{ResourceType} Request",
@@ -162,7 +162,6 @@ namespace wcerms.Pages.Organizer
         }
     }
 }
-
 
 
 
