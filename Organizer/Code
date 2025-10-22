@@ -29,6 +29,7 @@ namespace wcerms.Pages.Organizer
         public int TotalResources { get; set; }
         public int TotalBookings { get; set; }
         [BindProperty(SupportsGet = true)] public string? Search { get; set; }
+        public List<Venue>? AvailableVenues { get; set; }
 
         public void OnGet()
         {
@@ -45,6 +46,10 @@ namespace wcerms.Pages.Organizer
                 TotalVenues = _context.Venues.Count();
                 TotalResources = _context.Resources.Count();
                 TotalBookings = _context.Bookings.Count();
+            }
+            else if (Section == "CreateEvent")
+            {
+                AvailableVenues = _context.Venues.Where(v => v.Status == "Approved").ToList();
             }
         }
 
@@ -91,7 +96,8 @@ namespace wcerms.Pages.Organizer
                 Name = VenueName,
                 Details = VenueDetails,
                 Capacity = 0,
-                Location = "To be confirmed"
+                Location = "To be confirmed",
+                Status = "Pending"
             };
 
             _context.Venues.Add(venue);
@@ -113,7 +119,8 @@ namespace wcerms.Pages.Organizer
             {
                 ResourceType = ResourceType,
                 ResourceName = $"{ResourceType} Request",
-                Quantity = Quantity
+                Quantity = Quantity,
+                Status = "Pending"
             };
 
             _context.Resources.Add(resource);
