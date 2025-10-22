@@ -7,20 +7,15 @@
 <main class="dashboard-layout">
     <div class="dashboard-wrapper organizer-dashboard">
 
-        <!-- Sidebar -->
         <nav class="dashboard-sidebar">
             <h3>Organizer Tools</h3>
             <ul>
-                <li><a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent">Create Event</a></li>
-                <li><a asp-page="/Organizer/Dashboard" asp-route-Section="RequestVenue">Request Venue</a></li>
-                <li><a asp-page="/Organizer/Dashboard" asp-route-Section="RequestResources">Request Resources</a></li>
+                <li><a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent">Create Event Request</a></li>
                 <li><a asp-page="/Organizer/Dashboard" asp-route-Section="MyBookings">My Bookings</a></li>
             </ul>
         </nav>
 
-        <!-- Main Content -->
         <div class="dashboard-main">
-
             @if (TempData["Message"] != null)
             {
                 <div class="alert alert-success">@TempData["Message"]</div>
@@ -30,62 +25,72 @@
             {
                 case "CreateEvent":
                     <section>
-                        <h2>Create Event</h2>
-                        <form method="post" asp-page-handler="CreateEvent">
+                        <h2>Create Event Request</h2>
+                        <form method="post" asp-page-handler="CreateEventRequest" id="eventForm">
+                            <h4>Event Details</h4>
                             <div class="mb-3">
-                                <label class="form-label">Event Name</label>
-                                <input type="text" name="EventName" class="form-control" required />
+                                <label class="form-label">Event Title</label>
+                                <input type="text" asp-for="EventTitle" class="form-control" required />
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Date</label>
-                                <input type="date" name="EventDate" class="form-control" required />
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Start Date & Time</label>
+                                    <input type="datetime-local" asp-for="StartDateTime" class="form-control" required
+                                           id="startDateTime" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">End Date & Time</label>
+                                    <input type="datetime-local" asp-for="EndDateTime" class="form-control" required
+                                           id="endDateTime" />
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Description</label>
-                                <textarea name="EventDescription" class="form-control" rows="3"></textarea>
+                                <textarea asp-for="EventDescription" class="form-control" rows="3"></textarea>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Create Event</button>
-                        </form>
-                    </section>
-                    break;
-
-                case "RequestVenue":
-                    <section>
-                        <h2>Request Venue</h2>
-                        <form method="post" asp-page-handler="RequestVenue">
+                            <hr />
+                            <h4>Venue</h4>
                             <div class="mb-3">
-                                <label class="form-label">Venue Name</label>
-                                <input type="text" name="VenueName" class="form-control" required />
+                                <label class="form-label">Select Venue</label>
+                                <select asp-for="SelectedVenueId" class="form-select">
+                                    <option value="">-- Create New Venue --</option>
+                                    @foreach (var v in Model.AvailableVenues)
+                                    {
+                                        <option value="@v.VenueId">@v.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Capacity</label>
+                                    <input type="number" asp-for="VenueCapacity" class="form-control" min="0" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" asp-for="VenueLocation" class="form-control" />
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Details</label>
-                                <textarea name="VenueDetails" class="form-control" rows="3"></textarea>
+                                <textarea asp-for="VenueDetails" class="form-control" rows="2"></textarea>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Submit Request</button>
-                        </form>
-                    </section>
-                    break;
-
-                case "RequestResources":
-                    <section>
-                        <h2>Request Resources</h2>
-                        <form method="post" asp-page-handler="RequestResources">
-                            <div class="mb-3">
-                                <label class="form-label">Resource Type</label>
-                                <input type="text" name="ResourceType" class="form-control" placeholder="e.g., Projector, Chairs" />
+                            <hr />
+                            <h4>Resources</h4>
+                            <div id="resource-list">
+                                <div class="resource-item mb-2 d-flex align-items-center gap-2">
+                                    <input type="text" name="ResourceType" class="form-control" placeholder="Resource Type (e.g., Chairs)" required />
+                                    <input type="number" name="ResourceQty" class="form-control" placeholder="Qty" min="1" required inputmode="numeric" style="width:100px;" />
+                                </div>
                             </div>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="addResource()">+ Add Another Resource</button>
 
-                            <div class="mb-3">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" name="Quantity" class="form-control" min="1" />
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                            <button type="submit" class="btn btn-primary">Submit Event Request</button>
                         </form>
                     </section>
                     break;
@@ -113,6 +118,27 @@
                                             <td>@booking.Date.ToString("MMM dd, yyyy")</td>
                                             <td>@booking.Status</td>
                                         </tr>
+                                    <td>
+                                        @switch (booking.Status)
+                                        {
+                                            case "Approved":
+                                                <span class="badge bg-success">Approved</span>
+                                                ;
+                                                break;
+                                            case "Rescheduled":
+                                                <span class="badge bg-warning">Rescheduled</span>
+                                                ;
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge bg-danger">Cancelled</span>
+                                                ;
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">Requested</span>
+                                                ;
+                                                break;
+                                        }
+                                    </td>
                                     }
                                 </tbody>
                             </table>
@@ -127,10 +153,49 @@
                 default:
                     <section>
                         <h2>Welcome, Organizer!</h2>
-                        <p>Select a tool from the sidebar to begin managing your events and bookings.</p>
+                        <p>Select an option from the sidebar to manage your events.</p>
                     </section>
                     break;
             }
         </div>
     </div>
 </main>
+
+@section Scripts {
+    <script>
+
+        const startInput = document.getElementById('startDateTime');
+        const endInput = document.getElementById('endDateTime');
+
+        function setMinDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            startInput.min = minDateTime;
+            endInput.min = minDateTime;
+        }
+
+        setMinDateTime();
+
+        startInput.addEventListener('change', () => {
+            endInput.min = startInput.value;
+        });
+    </script>
+    <script>
+        function addResource() {
+            const container = document.getElementById('resource-list');
+            const item = document.createElement('div');
+            item.classList.add('resource-item', 'mb-2', 'd-flex', 'align-items-center', 'gap-2');
+            item.innerHTML = `
+                <input type="text" name="ResourceType" class="form-control" placeholder="Resource Type (e.g., Tables)" required />
+                <input type="number" name="ResourceQty" class="form-control" placeholder="Qty" min="1" required inputmode="numeric" style="width:100px;" />
+            `;
+            container.appendChild(item);
+        }
+    </script>
+}
