@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Linq;
 using wcerms.Data;
 using wcerms.Models;
-using System.Linq;
 
 namespace wcerms.Pages.Organizer
 {
@@ -160,6 +160,21 @@ namespace wcerms.Pages.Organizer
                     booking.Status = "Completed";
             }
         }
+
+        public JsonResult OnGetEvents()
+        {
+            var events = _context.Events
+                .Select(e => new
+                {
+                    id = e.EventId,
+                    title = e.Title,
+                    start = e.start_datetime,
+                    end = e.end_datetime
+                })
+                .ToList();
+
+            return new JsonResult(events);
+        }
     }
 }
 
@@ -182,151 +197,164 @@ namespace wcerms.Pages.Organizer
         <div class="alert alert-info">@TempData["Message"]</div>
     }
 
-    <div class="mb-3">
-        <a asp-page="/Organizer/Dashboard" asp-route-Section="Overview" class="btn btn-primary">Overview</a>
-        <a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent" class="btn btn-success">Create Event</a>
-        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestVenue" class="btn btn-warning">Request Venue</a>
-        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestResources" class="btn btn-info">Request Resources</a>
-        <a asp-page="/Organizer/Dashboard" asp-route-Section="MyBookings" class="btn btn-dark">My Bookings</a>
+    <div class="d-flex justify-content-center mb-3">
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="Overview" class="btn btn-primary mx-1">Overview</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent" class="btn btn-primary mx-1">Create Event</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestVenue" class="btn btn-primary mx-1">Request Venue</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestResources" class="btn btn-primary mx-1">Request Resources</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="MyBookings" class="btn btn-primary mx-1">My Bookings</a>
     </div>
 
     @if (Model.Section == "Overview")
     {
-        <div class="card p-4">
-            <h4>System Overview</h4>
-            <p><b>Total Events:</b> @Model.TotalEvents</p>
-            <p><b>Total Venues:</b> @Model.TotalVenues</p>
-            <p><b>Total Resources:</b> @Model.TotalResources</p>
-            <p><b>Total Bookings:</b> @Model.TotalBookings</p>
-        </div>
+        <h4>System Overview</h4>
+        <ul>
+            <li>Total Events: @Model.TotalEvents</li>
+            <li>Total Venues: @Model.TotalVenues</li>
+            <li>Total Resources: @Model.TotalResources</li>
+            <li>Total Bookings: @Model.TotalBookings</li>
+        </ul>
+
+        <div id="calendar"></div>
     }
-    else if (Model.Section == "CreateEvent")
+
+    @if (Model.Section == "CreateEvent")
     {
-        <div class="card p-4">
-            <h4>Create New Event</h4>
-            <form method="post" asp-page-handler="CreateEvent">
-                <div class="mb-3">
-                    <label>Event Name</label>
-                    <input asp-for="EventName" class="form-control" />
-                </div>
+        <h4>Create Event</h4>
+        <form method="post" asp-page-handler="CreateEvent">
+            <div class="form-group">
+                <label>Event Name:</label>
+                <input asp-for="EventName" class="form-control" />
+            </div>
 
-                <div class="mb-3">
-                    <label>Event Date</label>
-                    <input asp-for="EventDate" type="date" class="form-control" />
-                </div>
+            <div class="form-group">
+                <label>Date:</label>
+                <input asp-for="EventDate" type="date" class="form-control" />
+            </div>
 
-                <div class="mb-3">
-                    <label>Event Description</label>
-                    <textarea asp-for="EventDescription" class="form-control"></textarea>
-                </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea asp-for="EventDescription" class="form-control"></textarea>
+            </div>
 
-                <div class="mb-3">
-                    <label for="venue">Select Venue</label>
-                    <select asp-for="VenueName" class="form-control">
-                        <option value="">-- Choose a venue --</option>
-                        @if (Model.AvailableVenues != null)
+            <div class="form-group">
+                <label>Venue:</label>
+                <select asp-for="VenueName" class="form-control">
+                    <option value="">-- Select Venue --</option>
+                    @if (Model.AvailableVenues != null)
+                    {
+                        foreach (var venue in Model.AvailableVenues)
                         {
-                            foreach (var venue in Model.AvailableVenues)
-                            {
-                                <option value="@venue.Name">@venue.Name - @venue.Location</option>
-                            }
+                            <option value="@venue.Name">@venue.Name - @venue.Location</option>
                         }
-                    </select>
-                </div>
+                    }
+                </select>
+            </div>
 
-                <button type="submit" class="btn btn-success">Create Event</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-success mt-3">Create Event</button>
+        </form>
     }
-    else if (Model.Section == "RequestVenue")
+
+    @if (Model.Section == "RequestVenue")
     {
-        <div class="card p-4">
-            <h4>Request Venue</h4>
-            <form method="post" asp-page-handler="RequestVenue">
-                <div class="mb-3">
-                    <label>Venue Name</label>
-                    <input asp-for="VenueName" class="form-control" />
-                </div>
+        <h4>Request New Venue</h4>
+        <form method="post" asp-page-handler="RequestVenue">
+            <div class="form-group">
+                <label>Venue Name:</label>
+                <input asp-for="VenueName" class="form-control" />
+            </div>
 
-                <div class="mb-3">
-                    <label>Venue Details</label>
-                    <textarea asp-for="VenueDetails" class="form-control"></textarea>
-                </div>
+            <div class="form-group">
+                <label>Details:</label>
+                <textarea asp-for="VenueDetails" class="form-control"></textarea>
+            </div>
 
-                <button type="submit" class="btn btn-warning">Submit Venue Request</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-success mt-3">Submit Venue Request</button>
+        </form>
     }
-    else if (Model.Section == "RequestResources")
+
+    @if (Model.Section == "RequestResources")
     {
-        <div class="card p-4">
-            <h4>Request Resources</h4>
-            <form method="post" asp-page-handler="RequestResources">
-                <div class="resource-item mb-3">
-                    <label>Resource Type</label>
-                    <select asp-for="ResourceType" class="form-control">
-                        <option value="">-- Select Resource --</option>
-                        <option value="Chairs">Chairs</option>
-                        <option value="Tables">Tables</option>
-                        <option value="Sound System">Sound System</option>
-                        <option value="Projector">Projector</option>
-                        <option value="Lights">Lights</option>
-                    </select>
-                </div>
+        <h4>Request Resources</h4>
+        <form method="post" asp-page-handler="RequestResources">
+            <div class="form-group">
+                <label>Resource Type:</label>
+                <select asp-for="ResourceType" class="form-control">
+                    <option value="">-- Select Resource --</option>
+                    <option value="Chairs">Chairs</option>
+                    <option value="Tables">Tables</option>
+                    <option value="Sound System">Sound System</option>
+                    <option value="Projector">Projector</option>
+                    <option value="Lights">Lights</option>
+                </select>
+            </div>
 
-                <div class="mb-3">
-                    <label>Quantity</label>
-                    <input asp-for="Quantity" type="number" min="1" class="form-control" />
-                </div>
+            <div class="form-group">
+                <label>Quantity:</label>
+                <input asp-for="Quantity" type="number" min="1" class="form-control" />
+            </div>
 
-                <button type="submit" class="btn btn-info">Submit Resource Request</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-success mt-3">Submit Resource Request</button>
+        </form>
     }
-    else if (Model.Section == "MyBookings")
-    {
-        <div class="card p-4">
-            <h4>My Bookings</h4>
-            <form method="get">
-                <input asp-for="Search" class="form-control mb-3" placeholder="Search booking..." />
-                <button type="submit" class="btn btn-secondary">Search</button>
-            </form>
 
-            @if (Model.MyBookings != null && Model.MyBookings.Any())
-            {
-                <table class="table table-bordered mt-3">
-                    <thead>
+    @if (Model.Section == "MyBookings")
+    {
+        <h4>My Bookings</h4>
+        <form method="get">
+            <input type="text" name="Search" value="@Model.Search" placeholder="Search bookings..." class="form-control mb-3" />
+        </form>
+
+        @if (Model.MyBookings != null && Model.MyBookings.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Venue</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model.MyBookings)
+                    {
                         <tr>
-                            <th>Event</th>
-                            <th>Venue</th>
-                            <th>Date</th>
-                            <th>Status</th>
+                            <td>@booking.EventName</td>
+                            <td>@booking.VenueName</td>
+                            <td>@booking.Date.ToShortDateString()</td>
+                            <td>@booking.Status</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var b in Model.MyBookings)
-                        {
-                            <tr>
-                                <td>@b.EventName</td>
-                                <td>@b.VenueName</td>
-                                <td>@b.Date.ToString("yyyy-MM-dd")</td>
-                                <td>@b.Status</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p>No bookings found.</p>
-            }
-        </div>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No bookings found.</p>
+        }
     }
-    else
+
+    @if (Model.Section == "Welcome")
     {
-        <div class="card p-4 text-center">
-            <h4>Welcome to the Organizer Dashboard</h4>
-            <p>Manage your events, venue requests, and resources easily.</p>
+        <div class="text-center mt-5">
+            <h4>Welcome to the Organizer Dashboard!</h4>
+            <p>Select a section above to get started.</p>
         </div>
     }
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            events: '/Organizer/Dashboard?handler=Events'
+        });
+        calendar.render();
+    }
+});
+</script>
+
