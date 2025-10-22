@@ -1,0 +1,330 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using wcerms.Data;
+using wcerms.Models;
+using System.Linq;
+
+namespace wcerms.Pages.Organizer
+{
+    public class DashboardModel : PageModel
+    {
+        private readonly AppDbContext _context;
+
+        public DashboardModel(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        [BindProperty(SupportsGet = true)] public string Section { get; set; } = "Welcome";
+        [BindProperty] public string EventName { get; set; } = "";
+        [BindProperty] public DateTime EventDate { get; set; } = DateTime.Today;
+        [BindProperty] public string? EventDescription { get; set; }
+        [BindProperty] public string VenueName { get; set; } = "";
+        [BindProperty] public string? VenueDetails { get; set; }
+        [BindProperty] public string ResourceType { get; set; } = "";
+        [BindProperty] public int Quantity { get; set; }
+
+        public List<OrganizerBookingVM>? MyBookings { get; set; }
+        public List<OrganizerVenueVM>? AvailableVenues { get; set; }
+        public int TotalEvents { get; set; }
+        public int TotalVenues { get; set; }
+        public int TotalResources { get; set; }
+        public int TotalBookings { get; set; }
+        [BindProperty(SupportsGet = true)] public string? Search { get; set; }
+
+        public void OnGet()
+        {
+            if (string.IsNullOrEmpty(Section))
+                Section = "Welcome";
+
+            if (Section == "MyBookings")
+                LoadBookings();
+            else if (Section == "Overview")
+            {
+                TotalEvents = _context.Events.Count();
+                TotalVenues = _context.Venues.Count();
+                TotalResources = _context.Resources.Count();
+                TotalBookings = _context.Bookings.Count();
+            }
+            else if (Section == "CreateEvent")
+            {
+                AvailableVenues = _context.Venues.Select(v => new OrganizerVenueVM
+                {
+                    VenueId = v.VenueId,
+                    Name = v.Name,
+                    Location = v.Location,
+                    Details = v.Details
+                }).ToList();
+            }
+        }
+
+        public IActionResult OnPostCreateEvent()
+        {
+            if (EventDate < DateTime.Today)
+            {
+                TempData["Message"] = "Event date cannot be in the past.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
+            }
+
+            if (string.IsNullOrWhiteSpace(EventName))
+            {
+                TempData["Message"] = "Please enter an event name.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
+            }
+
+            var newEvent = new Event
+            {
+                Title = EventName,
+                Description = EventDescription,
+                start_datetime = EventDate,
+                end_datetime = EventDate.AddHours(2),
+                organizer_id = _context.Users.FirstOrDefault()
+            };
+
+            _context.Events.Add(newEvent);
+            _context.SaveChanges();
+
+            TempData["Message"] = $"Event '{EventName}' created successfully!";
+            return RedirectToPage("/Organizer/Dashboard", new { Section = "CreateEvent" });
+        }
+
+        public IActionResult OnPostRequestVenue()
+        {
+            if (string.IsNullOrWhiteSpace(VenueName))
+            {
+                TempData["Message"] = "Venue name is required.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestVenue" });
+            }
+
+            var venue = new Venue
+            {
+                Name = VenueName,
+                Details = VenueDetails,
+                Capacity = 0,
+                Location = "To be confirmed"
+            };
+
+            _context.Venues.Add(venue);
+            _context.SaveChanges();
+
+            TempData["Message"] = $"Venue '{VenueName}' request submitted!";
+            return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestVenue" });
+        }
+
+        public IActionResult OnPostRequestResources()
+        {
+            if (string.IsNullOrWhiteSpace(ResourceType) || Quantity <= 0)
+            {
+                TempData["Message"] = "Please provide valid resource and quantity.";
+                return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestResources" });
+            }
+
+            var resource = new Resource
+            {
+                ResourceType = ResourceType,
+                ResourceName = $"{ResourceType} Request",
+                Quantity = Quantity
+            };
+
+            _context.Resources.Add(resource);
+            _context.SaveChanges();
+
+            TempData["Message"] = $"Resource request for '{ResourceType}' submitted!";
+            return RedirectToPage("/Organizer/Dashboard", new { Section = "RequestResources" });
+        }
+
+        private void LoadBookings()
+        {
+            var query = from b in _context.Bookings
+                        join e in _context.Events on b.EventId equals e.EventId
+                        join v in _context.Venues on b.VenueId equals v.VenueId
+                        select new OrganizerBookingVM
+                        {
+                            EventName = e.Title,
+                            VenueName = v.Name,
+                            Date = b.Date,
+                            Status = b.Status
+                        };
+
+            if (!string.IsNullOrWhiteSpace(Search))
+                query = query.Where(b => b.EventName.Contains(Search) || b.Status.Contains(Search));
+
+            MyBookings = query.OrderByDescending(b => b.Date).ToList();
+
+            foreach (var booking in MyBookings)
+            {
+                if (booking.Date < DateTime.Today && booking.Status != "Completed")
+                    booking.Status = "Completed";
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+@page
+@model wcerms.Pages.Organizer.DashboardModel
+@{
+    ViewData["Title"] = "Organizer Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Organizer Dashboard</h2>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-info">@TempData["Message"]</div>
+    }
+
+    <div class="mb-3">
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="Overview" class="btn btn-primary">Overview</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="CreateEvent" class="btn btn-success">Create Event</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestVenue" class="btn btn-warning">Request Venue</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="RequestResources" class="btn btn-info">Request Resources</a>
+        <a asp-page="/Organizer/Dashboard" asp-route-Section="MyBookings" class="btn btn-dark">My Bookings</a>
+    </div>
+
+    @if (Model.Section == "Overview")
+    {
+        <div class="card p-4">
+            <h4>System Overview</h4>
+            <p><b>Total Events:</b> @Model.TotalEvents</p>
+            <p><b>Total Venues:</b> @Model.TotalVenues</p>
+            <p><b>Total Resources:</b> @Model.TotalResources</p>
+            <p><b>Total Bookings:</b> @Model.TotalBookings</p>
+        </div>
+    }
+    else if (Model.Section == "CreateEvent")
+    {
+        <div class="card p-4">
+            <h4>Create New Event</h4>
+            <form method="post" asp-page-handler="CreateEvent">
+                <div class="mb-3">
+                    <label>Event Name</label>
+                    <input asp-for="EventName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label>Event Date</label>
+                    <input asp-for="EventDate" type="date" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label>Event Description</label>
+                    <textarea asp-for="EventDescription" class="form-control"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="venue">Select Venue</label>
+                    <select asp-for="VenueName" class="form-control">
+                        <option value="">-- Choose a venue --</option>
+                        @if (Model.AvailableVenues != null)
+                        {
+                            foreach (var venue in Model.AvailableVenues)
+                            {
+                                <option value="@venue.Name">@venue.Name - @venue.Location</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Create Event</button>
+            </form>
+        </div>
+    }
+    else if (Model.Section == "RequestVenue")
+    {
+        <div class="card p-4">
+            <h4>Request Venue</h4>
+            <form method="post" asp-page-handler="RequestVenue">
+                <div class="mb-3">
+                    <label>Venue Name</label>
+                    <input asp-for="VenueName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label>Venue Details</label>
+                    <textarea asp-for="VenueDetails" class="form-control"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-warning">Submit Venue Request</button>
+            </form>
+        </div>
+    }
+    else if (Model.Section == "RequestResources")
+    {
+        <div class="card p-4">
+            <h4>Request Resources</h4>
+            <form method="post" asp-page-handler="RequestResources">
+                <div class="resource-item mb-3">
+                    <label>Resource Type</label>
+                    <select asp-for="ResourceType" class="form-control">
+                        <option value="">-- Select Resource --</option>
+                        <option value="Chairs">Chairs</option>
+                        <option value="Tables">Tables</option>
+                        <option value="Sound System">Sound System</option>
+                        <option value="Projector">Projector</option>
+                        <option value="Lights">Lights</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Quantity</label>
+                    <input asp-for="Quantity" type="number" min="1" class="form-control" />
+                </div>
+
+                <button type="submit" class="btn btn-info">Submit Resource Request</button>
+            </form>
+        </div>
+    }
+    else if (Model.Section == "MyBookings")
+    {
+        <div class="card p-4">
+            <h4>My Bookings</h4>
+            <form method="get">
+                <input asp-for="Search" class="form-control mb-3" placeholder="Search booking..." />
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </form>
+
+            @if (Model.MyBookings != null && Model.MyBookings.Any())
+            {
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Venue</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.MyBookings)
+                        {
+                            <tr>
+                                <td>@b.EventName</td>
+                                <td>@b.VenueName</td>
+                                <td>@b.Date.ToString("yyyy-MM-dd")</td>
+                                <td>@b.Status</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>No bookings found.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card p-4 text-center">
+            <h4>Welcome to the Organizer Dashboard</h4>
+            <p>Manage your events, venue requests, and resources easily.</p>
+        </div>
+    }
+</div>
