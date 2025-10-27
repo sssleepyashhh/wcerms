@@ -220,18 +220,18 @@ namespace wcerms.Pages.Admin
             
         }
 
-        //getting
-        public void OnGetEditVenue(int id)
-        {
-            var venue = _context.Venues.Find(id);
-            if (venue != null)
-            {
-                VenueName = venue.Name;
-                Capacity = venue.Capacity;
-                Location = venue.Location;
-                VenueDetails = venue.Details;
-            }
-        }
+        ////getting
+        //public void OnGetEditVenue(int id)
+        //{
+        //    var venue = _context.Venues.Find(id);
+        //    if (venue != null)
+        //    {
+        //        VenueName = venue.Name;
+        //        Capacity = venue.Capacity;
+        //        Location = venue.Location;
+        //        VenueDetails = venue.Details;
+        //    }
+        //}
 
 
         ////edited
@@ -335,18 +335,18 @@ namespace wcerms.Pages.Admin
             return RedirectToPage(new { Section = "ManageResources", EditResourceId = (int?)null });
         }
 
-        //getting
-        public void OnGetEditResource(int id)
-        {
-            var resource = _context.Resources.Find(id);
-            if (resource != null)
-            {
-                ResourceId = resource.ResourceId;
-                ResourceName = resource.ResourceName;
-                Quantity = resource.Quantity;
-                ResourceType = resource.ResourceType;
-            }
-        }
+        ////getting
+        //public void OnGetEditResource(int id)
+        //{
+        //    var resource = _context.Resources.Find(id);
+        //    if (resource != null)
+        //    {
+        //        ResourceId = resource.ResourceId;
+        //        ResourceName = resource.ResourceName;
+        //        Quantity = resource.Quantity;
+        //        ResourceType = resource.ResourceType;
+        //    }
+        //}
 
 
 
