@@ -1,199 +1,369 @@
 @page
 @model wcerms.Pages.Admin.DashboardModel
 @{
-	ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="dashboard-wrapper admin-dashboard">
+<main class="dashboard-layout">
+    <div class="dashboard-wrapper admin-dashboard">
 
-    <nav class="dashboard-sidebar">
-        <h3>Admin Tools</h3>
-        <ul>
-            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageVenues">Manage Venues</a></li>
-            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageResources">Manage Resources</a></li>
-            <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageUsers">Manage Users</a></li>
-            <li><a asp-page="/Admin/Dashboard" asp-route-Section="Reports">View Reports</a></li>
-        </ul>
-    </nav>
+        <nav class="dashboard-sidebar">
+            <h3>Admin Tools</h3>
+            <ul>
+                <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageVenues">Manage Venues</a></li>
+                <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageResources">Manage Resources</a></li>
+                <li><a asp-page="/Admin/Dashboard" asp-route-Section="ManageUsers">Manage Users</a></li>
+                <li><a asp-page="/Admin/Dashboard" asp-route-Section="Calendar">Manage Calendar</a></li>
+                <li><a asp-page="/Admin/Dashboard" asp-route-Section="Reports">View Reports</a></li>
+            </ul>
+        </nav>
 
-    <main class="dashboard-main">
-        @switch (Model.Section)
+        <div class="dashboard-main">
+            @switch (Model.Section)
+            {
+                 case "ManageVenues":
+                    <h2>Manage Venues</h2>
+
+                    @* <form method="post" asp-page-handler="AddVenue" class="mb-3">
+                        <div class="row">
+ 
+                            <div class="col-md-3">
+                                <input type="text" name="VenueName" class="form-control" placeholder="Venue Name" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="Capacity" class="form-control" placeholder="Capacity" min="1" required />
+                            </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" name="Location" class="form-control" placeholder="Location" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" name="Details" class="form-control" placeholder="Details" />
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-success w-200">Add</button>
+                            </div>
+                        </div>
+                        </div>
+                    </form> *@
+                    <form method="post" asp-page-handler="AddVenue" class="mb-3">
+                        <!-- Hidden field to track if we're editing -->
+                        <input type="hidden" asp-for="VenueID" />
+    
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" asp-for="VenueName" class="form-control" placeholder="Venue Name" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" asp-for="Capacity" class="form-control" placeholder="Capacity" min="1" required />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" asp-for="Location" class="form-control" placeholder="Location" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" asp-for="VenueDetails" class="form-control" placeholder="Details" />
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-success w-100">
+                                    @(Model.VenueID > 0 ? "Update" : "Add")
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Venue ID</th>
+                                <th>Venue Name</th>
+                                <th>Capacity</th>
+                                <th>Location</th>
+                                <th>Details</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Venues != null && Model.Venues.Any())
+                            {
+                                foreach (var v in Model.Venues)
+                                {
+                                    <tr>
+                                        <td>@v.VenueId</td>
+                                        <td>@v.Name</td>
+                                        <td>@v.Capacity</td>
+                                        <td>@v.Location</td>
+                                        <td>@v.Details</td>
+                                        <td>
+                                            @* <a asp-page="/Admin/EditVenue" asp-route-id="@v.VenueId" class="btn btn-warning btn-sm">Edit</a> *@
+                                            @* <a href="/Admin/Dashboard?Section=ManageVenues&EditVenueId=@v.VenueId" class="btn btn-warning btn-sm">Edit</a> *@
+                                            @* <a href="/Admin/Dashboard?Section=ManageVenues" class="nav-link">Manage Venues</a> *@
+                                            @* <a asp-page="/Admin/Dashboard" asp-route-Section="ManageVenues" asp-route-EditVenueId = "@v.VenueId" class="btn btn-warning btn-sm" Edit</a> *@
+                                            <a asp-page="/Admin/Dashboard" 
+                                               asp-route-Section="ManageVenues" 
+                                               asp-route-EditVenueId="@v.VenueId" 
+                                               class="btn btn-warning btn-sm me-2">Edit</a>
+                                            <a asp-page="/Admin/Dashboard" asp-page-handler="DeleteVenue" asp-route-id="@v.VenueId"
+                                               class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to delete this venue?');">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5">No venues available.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                    break;
+
+                case "ManageResources":
+                    <h2>Manage Resources</h2>
+
+                    <form method="post" asp-page-handler="AddResource" class="mb-3">
+                        <input type="hidden" name="ResourceId" value="@(Model.EditResourceId ?? Model.ResourceId)" />
+    
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" asp-for="ResourceName" class="form-control" placeholder="Resource Name" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" asp-for="Quantity" class="form-control" placeholder="Quantity" min="0" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" asp-for="ResourceType" class="form-control" placeholder="Type" />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100">
+                                    @(Model.EditResourceId.HasValue ? "Update" : "Add")
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Resource ID</th>
+                                <th>Resource Type</th>
+                                <th>Resource Name</th>
+                                <th>Quantity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Resources != null && Model.Resources.Any())
+                            {
+                                foreach (var r in Model.Resources)
+                                {
+                                    <tr>
+                                        <td>@r.ResourceId</td>
+                                        <td>@r.ResourceType</td>
+                                        <td>@r.ResourceName</td>
+                                        <td>@r.Quantity</td>
+                                        <td>
+                                            @* <a asp-page="/Admin/EditResource" asp-route-id="@r.ResourceId" class="btn btn-warning btn-sm">Edit</a> *@
+                                            <a asp-page="/Admin/Dashboard" 
+                                               asp-route-Section="ManageResources"
+                                               asp-route-EditResourceId="@r.ResourceId"
+                                               class="btn btn-warning btn-sm me-2">Edit</a>
+                                            <a asp-page="/Admin/Dashboard" asp-page-handler="DeleteResource" asp-route-id="@r.ResourceId"
+                                               class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to delete this resource?');">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="4">No resources available.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                    break;
+
+                case "ManageUsers":
+                    <h2>Manage Users</h2>
+
+                    <form method="post" asp-page-handler="AddUser" class="mb-3">
+                        <div class="row">
+                            <div class="col-md-3"><input type="text" name="Name" class="form-control" placeholder="Full Name" required /></div>
+                            <div class="col-md-3"><input type="email" name="Email" class="form-control" placeholder="Email" required /></div>
+                            <div class="col-md-3"><input type="password" name="Password" class="form-control" placeholder="Password" required /></div>
+                            <div class="col-md-2">
+                                <select name="Role" class="form-control">
+                                    <option>Admin</option>
+                                    <option>Organizer</option>
+                                    <option>Staff</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1"><button type="submit" class="btn btn-success w-100">Add</button></div>
+                        </div>
+                    </form>
+
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Users != null && Model.Users.Any())
+                            {
+                                foreach (var u in Model.Users)
+                                {
+                                    <tr>
+                                        <td>@u.Name</td>
+                                        <td>@u.Email</td>
+                                        <td>@u.Role</td>
+                                        <td>
+                                            <a asp-page="/Admin/Dashboard" asp-page-handler="DeleteUser" asp-route-id="@u.UserId"
+                                               class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="4">No users available.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                    break;
+
+                case "Reports":
+     <h2>System Audit Reports</h2>
+
+    <form method="get" class="report-filter-form">
+        <input type="hidden" name="Section" value="Reports" />
+
+        <div class="filter-row">
+            <input type="text" name="ReportSearch" value="@Model.ReportSearch" placeholder="Search..." />
+
+            <select name="TableFilter">
+                <option value="">All Tables</option>
+                <option value="Users" selected="@(Model.TableFilter == "Users")">Users</option>
+                <option value="Venues" selected="@(Model.TableFilter == "Venues")">Venues</option>
+                <option value="Resources" selected="@(Model.TableFilter == "Resources")">Resources</option>
+                <option value="Events" selected="@(Model.TableFilter == "Events")">Events</option>
+            </select>
+
+            <label>From:</label>
+            <input type="date" name="DateFrom" value="@(Model.DateFrom?.ToString("yyyy-MM-dd"))" />
+
+            <label>To:</label>
+            <input type="date" name="DateTo" value="@(Model.DateTo?.ToString("yyyy-MM-dd"))" />
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <table class="dashboard-table reports-table">
+        <thead>
+            <tr>
+                <th>UserId</th>
+                <th>Name</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.AuditLogs.Any())
         {
-            case "ManageVenues":
-    			<h2>Manage Venues</h2>
-    			<form method="post">
-        			<div class="mb-3">
-        			<label>Venue Name</label>
-       				<input type="text" name="VenueName" class="form-control" placeholder="Enter Venue Name" required />
-        			</div>
+            foreach (var log in Model.AuditLogs)
+            {
+                <tr>
+                    <td>@log.TableName</td>
+                    <td>@log.ActionType</td>
+                    <td>@log.KeyValues</td>
+                    <td class="truncate">@log.OldValues</td>
+                    <td class="truncate">@log.NewValues</td>
+                    <td>@log.PerformedBy</td>
+                    <td>@log.PerformedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="7">No records found.</td></tr>
+        }
+        </tbody>
+    </table>
+    break;
 
-        			<div class="mb-3">
-        			<label>Capacity (Max Number of People)</label>
-        			<input type="number" name="Capacity" class="form-control" placeholder="Enter Capacity"  min="1" required />
-        			</div>
 
-        			<div class="mb-3">
-        			<label>Venue Details</label>
-        			<textarea name="VenueDetails" class="form-control" placeholder="Describe the venue" rows="4"></textarea>
-        			</div>
+                case "Calendar":
+    <h2>Event Calendar</h2>
 
-        			<button class="btn btn-primary">Save</button>
-    			</form>
-   
-    			break;
+    <div class="calendar-nav mb-3 d-flex justify-content-between align-items-center">
+        <a asp-page="/Admin/Dashboard" asp-route-Section="Calendar" asp-route-month="@Model.PrevMonth" asp-route-year="@Model.PrevYear" class="btn btn-light">← Prev</a>
+        <strong>@Model.DisplayMonthYear</strong>
+        <a asp-page="/Admin/Dashboard" asp-route-Section="Calendar" asp-route-month="@Model.NextMonth" asp-route-year="@Model.NextYear" class="btn btn-light">Next →</a>
+    </div>
 
-			case "ManageResources":
-    			<h2>Manage Resources</h2>
-    			<form method="post">
-        			<input type="text" class="form-control" placeholder="Resource Name" />
+    <div class="calendar-header">
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+    </div>
 
-        			<div class="mb-3">
-        			<input type="number" name="Quantity" class="form-control" placeholder="Quantity"  min="1" required />
-        			</div>
+    <div class="calendar-body">
+        @{
+            var totalCells = Model.DaysInMonth + Model.StartDayOfWeek;
+            int day = 1;
+        }
 
-        			<div class="mb-3">
-        			<textarea name="Condition" class="form-control" rows="3"></textarea>
-        			</div>
+        @for (int i = 0; i < totalCells; i++)
+        {
+            if (i < Model.StartDayOfWeek)
+            {
+                <div class="calendar-cell empty"></div>
+            }
+            else
+            {
+                var date = new DateTime(Model.Year, Model.Month, day);
+                var events = Model.GetEventsForDate(date);
 
-        			<button class="btn btn-primary" >Save</button>
-    			</form>
-   				break;
+                <div class="calendar-cell">
+                    <div class="calendar-date">@day</div>
 
-            case "ManageUsers":
-                <h2>Manage Users</h2>
-
-                <div style="margin-bottom: 10px;">
-                <a href="@Url.Action("AddUser", "Admin")" class="btn btn-success">Add User</a>
+                    @if (events.Any())
+                    {
+                        <ul class="calendar-events">
+                            @foreach (var e in events)
+                            {
+                                <li>@e</li>
+                            }
+                        </ul>
+                    }
                 </div>
 
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Users != null && Model.Users.Any())
-                        {
-                            foreach (var user in Model.Users)
-                            {
-                                <tr>
-                                    <td>@user.Name</td>
-                                    <td>@user.Email</td>
-                                    <td>@user.Role</td>
-                                    <td>
-                                        <a href="@Url.Action("EditUser", "Admin", new { email = user.Email })" class="btn btn-primary btn-sm">Edit</a>
-                                        <a href="@Url.Action("DeleteUser", "Admin", new { email = user.Email })" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="3">No users found.</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                break;
-
-            case "Reports":
-                <h2>Reports</h2>
-                <p>Reports content here...</p>
-                break;
-
-            default:
-                <h2>Welcome, Admin!</h2>
-				<h3>Bookings Overview & Event Timeline</h3>
-				//paayos na lang hehe
-				//Calendar
-				<style>
-				.cal-wrap { width: 125%, max-width:125%; margin-left:auto; margin-right:auto; }
-				.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-				.nav-btn { text-decoration:none; padding:6px 10px; border:1px solid #ddd; border-radius:4px; color:#111; background:#fff; }
-				.month-label { font-weight:700; font-size:1rem; }
-				table.calendar { width:100%; border-collapse:collapse; }
-				table.calendar th, table.calendar td { border:1px solid #e6e6e6; padding:8px; text-align:left; vertical-align:top; height:86px; }
-				table.calendar th { background:#fafafa; font-weight:700; text-align:center; }
-				.day-num { font-weight:700; display:flex; margin-bottom:6px; }
-				.events { margin:0; padding-left:10px; font-size:0.92rem; line-height:1.35; }
-				.events li { margin-bottom:4px; }
-				.empty { background:transparent; border:none; }
-				</style>
-				<div class="cal-wrap" aria-label="Calendar">
-    				<div class="cal-header">
-        				<a class="nav-btn" href="?month=@Model.PrevMonth&year=@Model.PrevYear">‹ Prev</a>
-        				<div class="month-label">@Model.DisplayMonthYear</div>
-        				<a class="nav-btn" href="?month=@Model.NextMonth&year=@Model.NextYear">Next ›</a>
-    				</div>
-
-    			<table class="calendar" role="table" aria-label="Calendar">
-        			<thead>
-            			<tr>
-                			<th scope="col">Sun</th>
-                			<th scope="col">Mon</th>
-                			<th scope="col">Tue</th>
-                			<th scope="col">Wed</th>
-                			<th scope="col">Thu</th>
-                			<th scope="col">Fri</th>
-                			<th scope="col">Sat</th>
-            			</tr>
-        			</thead>
-    			<tbody>
-        			@{
-            			int day = 1;
-            			int daysInMonth = Model.DaysInMonth;
-            			int start = Model.StartDayOfWeek;
-            			int totalCells = start + daysInMonth;
-            			int weeks = (int)Math.Ceiling(totalCells / 7.0);
-        			}
-
-        			@for (int r = 0; r < weeks; r++)
-        			{
-            			<tr>
-                			@for (int c = 0; c < 7; c++)
-                			{
-                    			int cellIndex = r * 7 + c;
-                    			if (cellIndex < start || day > daysInMonth)
-                    			{
-                        			<td class="empty" aria-hidden="true"></td>
-                    			}
-                    			else
-                    			{
-                        			var thisDate = new DateTime(Model.Year, Model.Month, day);
-                        			var list = Model.GetEventsForDate(thisDate);
-                        			<td>
-                            			<span class="day-num">@day</span>
-
-                            			@if (list != null && list.Any())
-                            			{
-                                			<ul class="events">
-                               				@foreach (var ev in list)
-                                			{
-                                    			<li>@ev</li>
-                                			}
-                                			</ul>
-                            			}
-                            			else
-                            			{
-                                			<ul class="events">
-                                			</ul>
-                            			}
-                        			</td>
-                        			day++;
-                        		}
-                    		}
-            				</tr>
-            			}
-            			</tbody>
-    				</table>
-				</div>
-                break;
+                day++;
+            }
         }
-    </main>
+    </div>
+    break;
 
-</div>
+    default:
+                    <section>
+                        <h2>Welcome, Admin!</h2>
+                        <p>Select a tool from the sidebar to browse events or search available venues.</p>
+                    </section>
+                    break;
+            }
+        </div>
+
+    </div>
+</main>
